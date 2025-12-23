@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sign Language Detection</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="container">
+
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <h2>Sign Language Detection</h2>
+    <p class="subtitle">Use your webcam to stream a sign and get live predictions</p>
+
+    <div class="camera-box">
+      <video id="video" autoplay></video>
+      <span class="live">LIVE HANDSIGN MODEL</span>
+    </div>
+
+    <div class="buttons">
+      <button class="btn green">Enable Camera</button>
+      <button class="btn gray">Stop</button>
+    </div>
+
+    <div class="status">
+      <span class="dot green"></span> Connected
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right">
+    <h3>Prediction & Classes</h3>
+
+    <div class="prediction">
+      <p><strong>US:</strong> CONFIRMATION</p>
+      <p>Model says: <span class="highlight">yes</span></p>
+    </div>
+
+    <h4>Active Sign Classes</h4>
+
+    <div class="tags">
+      <span>YES</span>
+      <span>NO</span>
+      <span>HELLO</span>
+      <span>THANK YOU</span>
+      <span>PLEASE</span>
+      <span>HELP</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
