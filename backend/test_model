@@ -1,0 +1,204 @@
+import cv2
+import mediapipe as mp
+import joblib
+import numpy as np
+from collections import deque, Counter
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+import pyttsx3
+import time
+
+# ===============================
+# 🔹 LOAD TRAINED MODEL
+# ===============================
+model = joblib.load("asl_model.pkl")
+
+# ===============================
+# 🔹 TEXT TO SPEECH (ONE ENGINE ONLY)
+# ===============================
+engine = pyttsx3.init()
+engine.setProperty("rate", 160)
+engine.setProperty("volume", 1.0)
+
+# ===============================
+# 🔹 GROQ (LLM) SETUP  ⭐ NEW
+# ===============================
+from groq import Groq
+import random
+
+# ✅ List of multiple API keys
+API_KEYS = [
+    "your api"
+]
+def get_client():
+    # Randomly pick one key for each request
+    key = random.choice(API_KEYS)
+    return Groq(api_key=key)
+
+def fix_grammar(words):
+    """
+    words = ['HOW', 'YOU']
+    return = 'How are you?'
+    """
+    client = get_client()
+    prompt = f"""
+You are a sign language interpreter.
+Convert these sign language words into correct English grammar.
+
+Words: {', '.join(words)}
+
+Return only the corrected sentence.
+"""
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+        {
+            "role": "system",
+            "content": "You are an expert sign language interpreter."
+        },
+        {
+            "role": "user",
+            "content": prompt
+        }
+        ],
+       temperature=0.2)
+
+
+    return response.choices[0].message.content.strip()
+
+# ===============================
+# 🔹 MEDIAPIPE HAND LANDMARKER
+# ===============================
+base_options = python.BaseOptions(
+    model_asset_path="hand_landmarker.task"
+)
+
+options = vision.HandLandmarkerOptions(
+    base_options=base_options,
+    num_hands=1,
+    min_hand_detection_confidence=0.6,
+    min_hand_presence_confidence=0.6,
+    min_tracking_confidence=0.6
+)
+
+detector = vision.HandLandmarker.create_from_options(options)
+print("HandLandmarker loaded")
+
+# ===============================
+# 🔹 SMOOTHING + SENTENCE BUFFER
+# ===============================
+predictions = deque(maxlen=15)
+sentence_words = []
+
+last_spoken_time = 0
+SPEAK_DELAY = 2.0
+final_sentence = ""
+sentence_display_time = 0
+SENTENCE_SHOW_DURATION = 3.0  # seconds
+
+
+# ===============================
+# 🔹 WEBCAM
+# ===============================
+cap = cv2.VideoCapture(0)
+
+if not cap.isOpened():
+    print("Camera not accessible")
+    exit()
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    frame = cv2.flip(frame, 1)
+    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    mp_image = mp.Image(
+        image_format=mp.ImageFormat.SRGB,
+        data=rgb
+    )
+
+    result = detector.detect(mp_image)
+    display_word = "No hand"
+
+    if result.hand_landmarks:
+        hand = result.hand_landmarks[0]
+        wrist = hand[0]
+
+        row = []
+        for lm in hand:
+            row.extend([
+                lm.x - wrist.x,
+                lm.y - wrist.y,
+                lm.z - wrist.z
+            ])
+
+        X = np.array(row).reshape(1, -1)
+        pred = model.predict(X)[0]
+        predictions.append(pred)
+
+        display_word = Counter(predictions).most_common(1)[0][0]
+
+        # ===============================
+        # 🔹 BUILD SENTENCE (NEW LOGIC)
+        # ===============================
+        current_time = time.time()
+
+        if (
+            display_word not in sentence_words
+            and display_word != "No hand"
+            and current_time - last_spoken_time > SPEAK_DELAY
+        ):
+            sentence_words.append(display_word)
+            last_spoken_time = current_time
+
+        # ===============================
+        # 🔹 CALL GROQ WHEN 2+ WORDS
+        # ===============================
+        if len(sentence_words) >= 2:
+            final_sentence = fix_grammar(sentence_words)
+
+            sentence_display_time = time.time()
+            engine.say(final_sentence)
+            engine.runAndWait()
+
+            sentence_words.clear()
+            predictions.clear()
+
+        # draw landmarks
+        h, w, _ = frame.shape
+        for lm in hand:
+            cx, cy = int(lm.x * w), int(lm.y * h)
+            cv2.circle(frame, (cx, cy), 4, (0, 255, 0), -1)
+
+    # ===============================
+    # 🔹 DISPLAY
+    # ===============================
+    cv2.putText(
+        frame,
+        f"Word: {display_word}",
+        (20, 50),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1.2,
+        (0, 255, 0),
+        3
+    )
+    # ===============================
+# 🔹 DISPLAY FINAL SENTENCE ON CAMERA
+# ===============================
+    if final_sentence and (time.time() - sentence_display_time < SENTENCE_SHOW_DURATION):
+        y0 = 100
+        for i, line in enumerate(final_sentence.split("\n")):
+            cv2.putText(frame,line,(20, y0 + i * 40),
+            cv2.FONT_HERSHEY_SIMPLEX,1.0,(0, 255, 255),3
+    )
+
+    cv2.imshow("Sign → Sentence (Groq)", frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
