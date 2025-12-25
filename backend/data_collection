@@ -1,0 +1,53 @@
+import cv2
+import os
+import time
+
+# ============================
+# CHANGE THIS WORD EACH TIME
+# ============================
+WORD = "PROMISE"   # ← change this for each word
+
+DATASET_DIR = "Train_words"
+SAVE_DIR = os.path.join(DATASET_DIR, WORD)
+
+if not os.path.exists(SAVE_DIR):
+    os.makedirs(SAVE_DIR)
+cap = cv2.VideoCapture(0)
+
+count = 0
+start_time = time.time()
+
+print(f"Recording word: {WORD}")
+print("Press 'Q' to stop recording")
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    frame = cv2.flip(frame, 1)
+
+    # Save image every frame
+    img_path = os.path.join(SAVE_DIR, f"{WORD}_{count}.jpg")
+    cv2.imwrite(img_path, frame)
+    count += 1
+
+    cv2.putText(
+        frame,
+        f"Recording {WORD} | Images: {count}",
+        (20, 40),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (0, 255, 0),
+        2
+    )
+
+    cv2.imshow("Collecting ASL Words", frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
+print(f"Saved {count} images for word '{WORD}'")
