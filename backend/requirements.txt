@@ -1,6 +1,8 @@
-fastapi
-uvicorn
-tensorflow
 opencv-python
+mediapipe
 numpy
-python-multipart
+pandas
+scikit-learn
+joblib
+pyttsx3
+groq
