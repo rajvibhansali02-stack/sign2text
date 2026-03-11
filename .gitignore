@@ -7,10 +7,7 @@ venv/
 __pycache__/
 *.pyc
 
-# Data and large files
-Train_words/
-processed_data/
-*.pkl
+# Large files but not data
 *.ipynb_checkpoints/
 
 # Frontend/Backend specifics
