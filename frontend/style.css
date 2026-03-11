@@ -127,3 +127,29 @@ video {
   border-radius: 20px;
   font-size: 12px;
 }
+/* Ensure button is clickable */
+button {
+  position: relative;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+/* Video should stay behind */
+video {
+  position: relative;
+  z-index: 1;
+}
+
+/* Camera box / overlays should NOT block clicks */
+.camera-box,
+.left,
+.right,
+.container {
+  pointer-events: none;
+}
+
+/* Allow button clicks */
+.buttons,
+.buttons button {
+  pointer-events: auto;
+}

@@ -15,38 +15,52 @@
     <p class="subtitle">Use your webcam to stream a sign and get live predictions</p>
 
     <div class="camera-box">
-      <video id="video" autoplay></video>
+      <video id="video" autoplay playsinline></video>
       <span class="live">LIVE HANDSIGN MODEL</span>
     </div>
 
     <div class="buttons">
-      <button class="btn green">Enable Camera</button>
-      <button class="btn gray">Stop</button>
+      <button id="enableBtn" class="btn green">Enable Camera</button>
+      <button id="stopBtn" class="btn gray">Stop</button>
     </div>
 
     <div class="status">
-      <span class="dot green"></span> Connected
+      <span class="dot green"></span>
+      <span>Connected to FastAPI</span>
     </div>
   </div>
 
   <!-- RIGHT PANEL -->
   <div class="right">
-    <h3>Prediction & Classes</h3>
+    <h3>Prediction</h3>
 
     <div class="prediction">
-      <p><strong>US:</strong> CONFIRMATION</p>
-      <p>Model says: <span class="highlight">yes</span></p>
+      <p id="predictionText">Waiting for camera...</p>
     </div>
 
     <h4>Active Sign Classes</h4>
-
     <div class="tags">
+      <span>HELLO</span>
+      <span>I</span>
       <span>YES</span>
       <span>NO</span>
-      <span>HELLO</span>
-      <span>THANK YOU</span>
+      <span>GOOD</span>
+      <span>BAD</span> 
       <span>PLEASE</span>
       <span>HELP</span>
+      <span>LOVE</span>
+      <span>YOU</span>
+      <span>NOW</span>
+      <span>OKAY</span>
+      <span>THANKYOU</span>
+      <span>SORRY</span>
+      <span>BEAUTIFUL</span>
+      <span>STOP</span>
+      <span>GO</span>
+      <span>WASHROOM</span>
+      <span>URGENT</span>
+      <span>PROMISE</span>
+      <span>LUCK</span>
     </div>
   </div>
 
